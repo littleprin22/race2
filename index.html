@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>방구차 수학 미션 - 4학년 곱셈과 나눗셈</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+      color: #fff;
+      overflow: auto;
+      overscroll-behavior: none;
+      touch-action: manipulation;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(255, 248, 150, .65), transparent 25%),
+        radial-gradient(circle at 82% 18%, rgba(125, 211, 252, .60), transparent 28%),
+        radial-gradient(circle at 50% 88%, rgba(244, 114, 182, .45), transparent 30%),
+        linear-gradient(135deg, #22c55e 0%, #38bdf8 45%, #8b5cf6 100%);
+    }
+    .stars, .stars::before, .stars::after {
+      position: fixed;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      background-image:
+        radial-gradient(#fff 1px, transparent 1px),
+        radial-gradient(#ffe066 1px, transparent 1px);
+      background-size: 80px 80px, 130px 130px;
+      opacity: .35;
+      animation: drift 18s linear infinite;
+    }
+    .stars::before { transform: scale(1.4); opacity: .22; animation-duration: 26s; }
+    .stars::after { transform: scale(.75); opacity: .28; animation-duration: 12s; }
+    @keyframes drift { from { background-position: 0 0; } to { background-position: 200px 120px; } }
+
+    .wrap {
+      width: min(1220px, 100vw);
+      height: 100vh;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 16px;
+      padding: 14px;
+      position: relative;
+      z-index: 1;
+    }
+    .panel {
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .18);
+      box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.2);
+      backdrop-filter: blur(14px);
+      overflow: hidden;
+    }
+    .game-panel { padding: 14px; display: flex; flex-direction: column; min-width: 0; }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    h1 { margin: 0; font-size: clamp(22px, 3vw, 36px); line-height: 1; letter-spacing: -1px; }
+    .subtitle { margin-top: 6px; color: #d1fae5; font-size: 14px; }
+    .title-glow {
+      background: linear-gradient(90deg, #fff7ad, #7dd3fc, #f0abfc, #fff7ad);
+      background-size: 240% auto;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: shine 4s linear infinite;
+    }
+    @keyframes shine { to { background-position: 240% center; } }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .badge {
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-weight: 900;
+      font-size: 14px;
+      background: linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+      border: 1px solid rgba(255,255,255,.26);
+      box-shadow: inset 0 1px rgba(255,255,255,.35);
+      white-space: nowrap;
+    }
+    .badge.yellow { color: #201400; background: linear-gradient(135deg, #fde047, #fb923c); }
+    .badge.blue { background: linear-gradient(135deg, #38bdf8, #2563eb); }
+    .badge.green { color: #052e16; background: linear-gradient(135deg, #86efac, #22c55e); }
+
+    .board-wrap { flex: 1; display: grid; place-items: center; min-height: 0; }
+    #board {
+      position: relative;
+      width: min(100%, calc((100vh - 124px) * 1.4));
+      aspect-ratio: 21 / 15;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 6px solid #fde047;
+      box-shadow: 0 24px 70px rgba(0,0,0,.38), 0 0 0 8px rgba(255,255,255,.25), 0 0 42px rgba(250,204,21,.45), inset 0 0 30px rgba(255,255,255,.22);
+      background: #67e8f9;
+    }
+    .cell { position:absolute; width: calc(100% / 21); height: calc(100% / 15); }
+    .road {
+      background: linear-gradient(135deg, #f6b35d, #fcd34d);
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,.12) 0 2px, transparent 2px),
+        linear-gradient(rgba(255,255,255,.10) 0 2px, transparent 2px);
+      background-size: 26px 26px;
+    }
+    .grass {
+      background: linear-gradient(135deg, #4ade80, #22c55e);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
+    }
+    .grass::after {
+      content:""; position:absolute; inset: 5px; border-radius: 8px;
+      background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.18), transparent 18%);
+      opacity:.55;
+    }
+    .sprite {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: calc(100% / 21);
+      height: calc(100% / 15);
+      display:grid; place-items:center;
+      font-size: clamp(20px, 2.8vw, 34px);
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,.32));
+      transition: transform .28s cubic-bezier(.16, 1, .3, 1), opacity .2s ease, filter .2s ease;
+      will-change: transform;
+      z-index: 5;
+    }
+    .player { animation: carBounce .55s ease-in-out infinite alternate; }
+    .enemy { animation: enemyPulse .7s ease-in-out infinite alternate; }
+    @keyframes carBounce { from { margin-top: 0; } to { margin-top: -2px; } }
+    @keyframes enemyPulse { from { scale: 1; } to { scale: 1.06; } }
+    .flag { animation: pop 1.1s infinite ease-in-out; z-index:4; filter: drop-shadow(0 0 10px rgba(255,255,0,.9)); }
+    @keyframes pop { 0%,100%{ transform: scale(1) rotate(-4deg);} 50%{ transform: scale(1.25) rotate(5deg);} }
+    .enemy.frozen { opacity:.42; filter: grayscale(1) drop-shadow(0 6px 7px rgba(0,0,0,.35)); }
+    .smoke {
+      position:absolute; z-index:3;
+      width: calc(100% / 21 * 1.75);
+      height: calc(100% / 15 * 1.2);
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(255,255,255,.95), rgba(232,240,255,.8) 48%, rgba(255,255,255,0) 78%);
+      filter: blur(2px);
+      animation: puff .8s ease-out infinite alternate;
+      pointer-events:none;
+    }
+    @keyframes puff { to { transform: scale(1.14); opacity:.72; } }
+    .sparkle {
+      position:absolute; z-index:2; color:#fff176; font-size:18px; animation: twinkle 1s infinite alternate;
+    }
+    @keyframes twinkle { to { transform: scale(1.3) rotate(20deg); opacity:.55; } }
+
+    aside { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+    .side-card {
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
+      border: 1px solid rgba(255,255,255,.18);
+      padding: 16px;
+      box-shadow: inset 0 1px rgba(255,255,255,.18);
+    }
+    .side-card.light { background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(236,253,245,.94)); color:#172033; }
+    .side-card h2 { margin: 0 0 10px; font-size: 21px; }
+    .hint { color:#d1fae5; font-size:14px; line-height:1.55; }
+    .light .hint { color:#475569; }
+    .fuel-box { margin-top: 12px; }
+    .fuel-track { height: 18px; background: rgba(255,255,255,.18); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.2); }
+    #fuelBar { height:100%; width:100%; background: linear-gradient(90deg, #22c55e, #fde047, #f97316); border-radius:999px; transition: width .2s; }
+    .controls { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; width:190px; margin: 10px auto; }
+    button {
+      border: 0;
+      border-radius: 15px;
+      padding: 11px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      box-shadow: 0 10px 22px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.25);
+      transition: transform .1s, filter .1s;
+    }
+    button:hover { transform: translateY(-1px); filter: brightness(1.08); }
+    button:active { transform: translateY(1px) scale(.98); }
+    .controls button { min-height: 42px; font-size: 18px; }
+    .wide { width:100%; margin-top:8px; }
+    .smoke-btn { background: linear-gradient(135deg, #334155, #0f172a); }
+    .reset-btn { background: linear-gradient(135deg, #f97316, #db2777); }
+    .message {
+      border-radius: 16px;
+      padding: 13px;
+      color:#052e16;
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      font-weight:800;
+      line-height:1.45;
+      min-height: 70px;
+    }
+    .list { margin: 0; padding-left: 18px; font-size:14px; line-height:1.7; }
+
+    .modal {
+      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:18px;
+      background: rgba(0,0,0,.68); z-index:20; backdrop-filter: blur(5px);
+    }
+    .modal.show { display:flex; }
+    .mission-card {
+      width:min(520px, 96%);
+      border-radius: 28px;
+      background: linear-gradient(180deg, #ffffff, #e0f2fe);
+      color:#111827;
+      padding: 22px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 8px rgba(255,255,255,.18);
+      animation: modalIn .25s ease-out;
+    }
+    @keyframes modalIn { from { transform: scale(.92) translateY(14px); opacity:0; } to { transform: scale(1); opacity:1; } }
+    .mission-tag { display:inline-block; padding:7px 11px; border-radius:999px; background:#10b981; color:#fff; font-weight:900; }
+    .mission-title { font-size:26px; margin:12px 0 6px; font-weight:1000; }
+    .formula {
+      margin: 14px 0;
+      padding: 18px;
+      border-radius: 20px;
+      text-align:center;
+      font-size: clamp(30px, 5vw, 46px);
+      font-weight:1000;
+      color:#78350f;
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 2px dashed #f59e0b;
+    }
+    .choices { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
+    .choices button { color:#111827; font-size:20px; background: linear-gradient(135deg, #ffffff, #c7d2fe); border:1px solid #c4b5fd; }
+    .end-title { text-align:center; font-size:34px; margin:8px 0; font-weight:1000; }
+    .end-emoji { text-align:center; font-size:74px; }
+
+    @media (max-width: 900px) {
+      .wrap { height: auto; min-height: 100vh; grid-template-columns: 1fr; padding-bottom: 16px; }
+      aside { display:grid; grid-template-columns: 1fr 1fr; }
+      #board { width: min(100%, 760px); }
+    }
+    @media (pointer: coarse) {
+      .wrap { gap: 10px; }
+      .game-panel { padding: 10px; }
+      #board { width: min(100%, calc(100vh * 1.18)); max-height: 58vh; }
+      button { min-height: 48px; font-size: 17px; }
+      .controls { width: min(260px, 100%); gap: 10px; }
+      .controls button { min-height: 54px; font-size: 22px; }
+      .wide { min-height: 52px; }
+    }
+    @media (max-width: 620px) {
+      .wrap { padding: 8px; gap: 8px; }
+      header { align-items:flex-start; flex-direction:column; }
+      aside { grid-template-columns: 1fr; padding: 10px; }
+      .badges { justify-content:flex-start; }
+      .choices { grid-template-columns:1fr; }
+      .subtitle { font-size:12px; }
+      #board { max-height: 50vh; }
+    }
+    @media (orientation: landscape) and (max-height: 620px) {
+      .wrap { grid-template-columns: 1fr 330px; height: 100vh; overflow: hidden; }
+      aside { display:flex; padding: 10px; overflow:auto; }
+      header { margin-bottom: 6px; }
+      h1 { font-size: 23px; }
+      .subtitle { font-size: 12px; }
+      #board { width: min(100%, calc((100vh - 88px) * 1.4)); max-height: calc(100vh - 88px); }
+      .side-card { padding: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="wrap">
+    <main class="panel game-panel">
+      <header>
+        <div>
+          <h1><span>🚙</span> <span class="title-glow">방구차 수학 미션</span></h1>
+          <div class="subtitle">초등 4학년 1학기 3단원 · 세 자리 수의 곱셈과 나눗셈</div>
+        </div>
+        <div class="badges">
+          <div class="badge yellow">점수 <span id="score">0</span></div>
+          <div class="badge blue">목숨 <span id="lives">3</span></div>
+          <div class="badge green">깃발 <span id="flags">0</span>/10</div>
+        </div>
+      </header>
+      <div class="board-wrap">
+        <div id="board">
+          <div id="modal" class="modal"></div>
+        </div>
+      </div>
+    </main>
+
+    <aside class="panel">
+      <section class="side-card">
+        <h2>⚡ 조작 방법</h2>
+        <div class="hint">방향키로 이동하고, 스페이스바 또는 연막 버튼으로 추격차를 잠시 멈추게 하세요.</div>
+        <div class="controls">
+          <div></div><button onclick="setDirection('up')">▲</button><div></div>
+          <button onclick="setDirection('left')">◀</button><button onclick="setDirection('down')">▼</button><button onclick="setDirection('right')">▶</button>
+        </div>
+        <button class="wide smoke-btn" onclick="dropSmoke()">💨 연막 뿌리기</button>
+        <button class="wide reset-btn" onclick="resetGame()">↻ 처음부터 다시</button>
+      </section>
+
+      <section class="side-card light">
+        <h2>🧮 학습 미션</h2>
+        <ul class="list">
+          <li>216×3으로 곱셈 준비하기</li>
+          <li>75÷8의 나머지 구하기</li>
+          <li>134×20, 195×50 계산하기</li>
+          <li>152×24처럼 몇십몇 곱하기</li>
+          <li>잘못 계산한 곳 찾기</li>
+        </ul>
+      </section>
+
+      <section class="side-card light">
+        <h2>📢 현재 상황</h2>
+        <div id="message" class="message">깃발을 먹고 수학 미션을 해결하세요!</div>
+        <div class="fuel-box">
+          <strong>⛽ 연료 <span id="fuelText">100</span>%</strong>
+          <div class="fuel-track"><div id="fuelBar"></div></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+<script>
+const rawMap = [
+  "#####################",
+  "#.....#.......#.....#",
+  "#.###.#.#####.#.###.#",
+  "#.#...#...#...#...#.#",
+  "#.#.#####.#.#####.#.#",
+  "#...#.....#.....#...#",
+  "###.#.###...###.#.###",
+  "#...#...#...#...#...#",
+  "#.#####.#.#.#.#####.#",
+  "#.....#...#...#.....#",
+  "#.###.#####.#####.###",
+  "#.#...#.......#...#.#",
+  "#.#.###.#####.###.#.#",
+  "#.................#..#",
+  "#####################"
+];
+const COLS = 21, ROWS = 15;
+const dirs = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
+const rotations = { right:0, down:90, left:180, up:-90 };
+const startPlayer = { x:1, y:13, dir:'right' };
+const startEnemies = [{x:19,y:1,dir:'left',frozen:0},{x:19,y:13,dir:'up',frozen:0}];
+const flags = [{x:2,y:1},{x:9,y:1},{x:18,y:1},{x:3,y:5},{x:10,y:6},{x:17,y:5},{x:1,y:9},{x:11,y:9},{x:19,y:11},{x:8,y:13}];
+const missions = [
+  { title:'준비하기 곱셈', story:'216을 3배 하면 얼마일까요?', formula:'216 × 3', answer:648, hint:'200×3, 10×3, 6×3을 더해요.', choices:[648,618,638,728] },
+  { title:'나머지 복습', story:'75를 8로 나누면 몫은 9, 나머지는?', formula:'75 ÷ 8 = 9 … ?', answer:3, hint:'8×9=72, 75-72를 계산해요.', choices:[3,2,4,5] },
+  { title:'스마트 팜 딸기 수확', story:'딸기를 하루 134kg씩 20일 동안 생산했어요.', formula:'134 × 20', answer:2680, hint:'134×2를 먼저 하고 10배 하면 돼요.', choices:[2680,2608,2480,1340] },
+  { title:'초콜릿값 계산', story:'1g에 195원인 초콜릿을 50g 샀어요.', formula:'195 × 50', answer:9750, hint:'195×5를 한 뒤 10배 해 보세요.', choices:[9750,9500,9850,8750] },
+  { title:'AI 농장 물 절약', story:'물을 일주일에 152L씩 24주 동안 절약했어요.', formula:'152 × 24', answer:3648, hint:'152×20과 152×4를 더해요.', choices:[3648,3528,3040,608] },
+  { title:'잘못 계산 고치기', story:'217×35를 바르게 계산해요.', formula:'217 × 35', answer:7595, hint:'217×30=6510, 217×5=1085예요.', choices:[7595,6510,1085,7495] }
+];
+let player, direction, enemies, smokes, collected, missionIndex, score, fuel, lives, paused, gameOver, win, tick, timer;
+let touchStartX = 0, touchStartY = 0;
+const board = document.getElementById('board');
+const modal = document.getElementById('modal');
+
+function isWall(x,y){ return rawMap[y]?.[x] === '#'; }
+function cellStyle(x,y){ return `left:${x/COLS*100}%;top:${y/ROWS*100}%`; }
+function moveStyle(x,y,extra=''){ return `transform:translate(${x*100}%, ${y*100}%) ${extra}`; }
+function nextPos(pos, dir){ const d=dirs[dir]; return { ...pos, x:pos.x+d.x, y:pos.y+d.y, dir }; }
+function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
+function setDirection(d){ direction = d; if (player) player.dir = d; drawSprites(); }
+function msg(t){ document.getElementById('message').textContent = t; }
+function chooseEnemyDir(e){
+  const options = Object.keys(dirs).filter(d => !isWall(e.x+dirs[d].x, e.y+dirs[d].y));
+  options.sort((a,b)=>{
+    const ap=nextPos(e,a), bp=nextPos(e,b);
+    return Math.abs(ap.x-player.x)+Math.abs(ap.y-player.y) - (Math.abs(bp.x-player.x)+Math.abs(bp.y-player.y));
+  });
+  return Math.random() < .75 ? options[0] : options[Math.floor(Math.random()*options.length)];
+}
+function drawBase(){
+  [...board.querySelectorAll('.cell,.sprite,.smoke,.sparkle')].forEach(el=>el.remove());
+  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
+    const c = document.createElement('div');
+    c.className = 'cell ' + (rawMap[y][x] === '#' ? 'grass' : 'road');
+    c.style.cssText = cellStyle(x,y);
+    board.appendChild(c);
+  }
+  for(let i=0;i<18;i++){
+    const s=document.createElement('div');
+    s.className='sparkle';
+    s.textContent='✦';
+    s.style.left=(Math.random()*94+2)+'%';
+    s.style.top=(Math.random()*90+4)+'%';
+    s.style.animationDelay=(Math.random()*2)+'s';
+    board.appendChild(s);
+  }
+}
+function drawSprites(){
+  [...board.querySelectorAll('.smoke')].forEach(el=>el.remove());
+
+  flags.forEach((f,i)=>{
+    let el = document.getElementById('flag-'+i);
+    if(collected.includes(i)) { if(el) el.remove(); return; }
+    if(!el){
+      el=document.createElement('div');
+      el.id='flag-'+i;
+      el.className='sprite flag';
+      el.textContent='🚩';
+      board.appendChild(el);
+    }
+    el.style.cssText=moveStyle(f.x,f.y);
+  });
+
+  smokes.forEach((s, i)=>{
+    const el=document.createElement('div');
+    el.className='smoke';
+    el.style.cssText=`left:${(s.x-.36)/COLS*100}%;top:${(s.y-.15)/ROWS*100}%`;
+    board.appendChild(el);
+  });
+
+  enemies.forEach((e,i)=>{
+    let el = document.getElementById('enemy-'+i);
+    if(!el){
+      el=document.createElement('div');
+      el.id='enemy-'+i;
+      el.className='sprite enemy';
+      board.appendChild(el);
+    }
+    el.className='sprite enemy '+(e.frozen>0?'frozen':'');
+    el.textContent=e.frozen>0?'🧊':'🚗';
+    el.style.cssText=moveStyle(e.x,e.y);
+  });
+
+  let car=document.getElementById('playerCar');
+  if(!car){
+    car=document.createElement('div');
+    car.id='playerCar';
+    car.className='sprite player';
+    car.textContent='🚙';
+    board.appendChild(car);
+  }
+  car.style.cssText=moveStyle(player.x,player.y,`rotate(${rotations[player.dir]}deg)`);
+  updateHud();
+}
+function updateHud(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('flags').textContent=collected.length;
+  document.getElementById('fuelText').textContent=Math.round(fuel);
+  document.getElementById('fuelBar').style.width=Math.max(0,fuel)+'%';
+}
+function dropSmoke(){
+  if(fuel < 8 || paused || gameOver || win) return;
+  fuel = Math.max(0, fuel-8);
+  smokes.push({x:player.x,y:player.y,life:12});
+  smokes = smokes.slice(-7);
+  msg('뿡! 연막을 뿌렸어요. 추격차가 잠시 멈출 수 있어요.');
+  drawSprites();
+}
+function showMission(){
+  paused = true;
+  const m = missions[missionIndex % missions.length];
+  modal.className='modal show';
+  modal.innerHTML = `<div class="mission-card">
+    <span class="mission-tag">수학 깃발 미션</span>
+    <div class="mission-title">${m.title}</div>
+    <p>${m.story}</p>
+    <div class="formula">${m.formula}</div>
+    <div class="choices">${shuffle(m.choices).map(c=>`<button onclick="answerMission(${c})">${c}</button>`).join('')}</div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:0">틀리면 힌트가 나오고 연료가 조금 줄어요.</p>
+  </div>`;
+}
+function answerMission(v){
+  const m = missions[missionIndex % missions.length];
+  if(v === m.answer){
+    score += 100 + Math.round(fuel);
+    missionIndex++;
+    paused = false;
+    modal.className='modal';
+    modal.innerHTML='';
+    msg('정답! 멋져요. 다음 깃발을 향해 출발!');
+  } else {
+    score = Math.max(0, score-30);
+    fuel = Math.max(0, fuel-7);
+    msg('아쉬워요. 힌트: ' + m.hint);
+  }
+  drawSprites();
+}
+function showEnd(success){
+  paused = true;
+  modal.className='modal show';
+  modal.innerHTML = `<div class="mission-card">
+    <div class="end-emoji">${success?'🏆':'💥'}</div>
+    <div class="end-title">${success?'미션 성공!':'게임 종료'}</div>
+    <p style="text-align:center;font-weight:800">${success?'모든 깃발을 모으며 곱셈 미션을 해결했어요.':'연료나 목숨이 모두 사라졌어요.'}</p>
+    <button class="wide reset-btn" onclick="resetGame()">↻ 다시 도전하기</button>
+  </div>`;
+}
+function gameLoop(){
+  if(paused || gameOver || win) return;
+  tick++;
+  fuel = Math.max(0, fuel-.32);
+  if(fuel <= 0){ gameOver=true; showEnd(false); return; }
+  smokes = smokes.map(s=>({...s,life:s.life-1})).filter(s=>s.life>0);
+  const np = nextPos(player, direction);
+  if(!isWall(np.x,np.y)) player = np;
+  player.dir = direction;
+  if(tick % 2 === 0){
+    enemies = enemies.map(e=>{
+      const hitSmoke = smokes.some(s=>s.x===e.x && s.y===e.y);
+      if(hitSmoke) return {...e, frozen:8};
+      if(e.frozen>0) return {...e, frozen:e.frozen-1};
+      const nd = chooseEnemyDir(e);
+      const n = nextPos(e, nd);
+      return isWall(n.x,n.y) ? e : {...n, frozen:0};
+    });
+  }
+  const flagIndex = flags.findIndex((f,i)=>!collected.includes(i) && f.x===player.x && f.y===player.y);
+  if(flagIndex >= 0){ collected.push(flagIndex); msg('수학 깃발 발견! 문제를 해결하세요.'); showMission(); }
+  if(enemies.some(e=>e.x===player.x && e.y===player.y && e.frozen<=0)){
+    lives--;
+    if(lives<=0){ gameOver=true; showEnd(false); return; }
+    player = {...startPlayer}; enemies = JSON.parse(JSON.stringify(startEnemies));
+    msg('빨간 차와 부딪혔어요. 다시 출발!');
+  }
+  if(collected.length >= flags.length){ win=true; showEnd(true); return; }
+  drawSprites();
+}
+function resetGame(){
+  player={...startPlayer}; direction='right'; enemies=JSON.parse(JSON.stringify(startEnemies));
+  smokes=[]; collected=[]; missionIndex=0; score=0; fuel=100; lives=3; paused=false; gameOver=false; win=false; tick=0;
+  modal.className='modal'; modal.innerHTML=''; msg('깃발을 먹고 수학 미션을 해결하세요!');
+  drawBase(); drawSprites();
+}
+document.addEventListener('keydown', e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  if(e.key==='ArrowUp') setDirection('up');
+  if(e.key==='ArrowDown') setDirection('down');
+  if(e.key==='ArrowLeft') setDirection('left');
+  if(e.key==='ArrowRight') setDirection('right');
+  if(e.key===' ') dropSmoke();
+});
+
+board.addEventListener('touchstart', e=>{
+  const t = e.changedTouches[0];
+  touchStartX = t.clientX;
+  touchStartY = t.clientY;
+}, {passive:true});
+
+board.addEventListener('touchend', e=>{
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  if(Math.abs(dx) < 22 && Math.abs(dy) < 22) { dropSmoke(); return; }
+  if(Math.abs(dx) > Math.abs(dy)) setDirection(dx > 0 ? 'right' : 'left');
+  else setDirection(dy > 0 ? 'down' : 'up');
+}, {passive:true});
+
+resetGame();
+timer = setInterval(gameLoop, 135);
+</script>
+</body>
+</html>
