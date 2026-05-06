@@ -1,557 +1,548 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>방구차 수학 미션 - 4학년 곱셈과 나눗셈</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>방구차 수학 어드벤처 🏎️💨</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: "Pretendard", "Noto Sans KR", system-ui, sans-serif;
-      color: #fff;
-      overflow: auto;
-      overscroll-behavior: none;
-      touch-action: manipulation;
-      background:
-        radial-gradient(circle at 12% 12%, rgba(255, 248, 150, .65), transparent 25%),
-        radial-gradient(circle at 82% 18%, rgba(125, 211, 252, .60), transparent 28%),
-        radial-gradient(circle at 50% 88%, rgba(244, 114, 182, .45), transparent 30%),
-        linear-gradient(135deg, #22c55e 0%, #38bdf8 45%, #8b5cf6 100%);
+    @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@500;700;900&display=swap');
+    
+    body { 
+      overscroll-behavior: none; 
+      touch-action: manipulation; 
+      font-family: 'Noto Sans KR', sans-serif;
     }
-    .stars, .stars::before, .stars::after {
-      position: fixed;
-      inset: 0;
-      content: "";
-      pointer-events: none;
-      background-image:
-        radial-gradient(#fff 1px, transparent 1px),
-        radial-gradient(#ffe066 1px, transparent 1px);
-      background-size: 80px 80px, 130px 130px;
-      opacity: .35;
-      animation: drift 18s linear infinite;
+    .title-font { font-family: 'Black Han Sans', sans-serif; }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0) translateY(0); }
+      25% { transform: translateX(-6px) translateY(3px); }
+      50% { transform: translateX(6px) translateY(-3px); }
+      75% { transform: translateX(-6px) translateY(-3px); }
     }
-    .stars::before { transform: scale(1.4); opacity: .22; animation-duration: 26s; }
-    .stars::after { transform: scale(.75); opacity: .28; animation-duration: 12s; }
-    @keyframes drift { from { background-position: 0 0; } to { background-position: 200px 120px; } }
-
-    .wrap {
-      width: min(1220px, 100vw);
-      height: 100vh;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 360px;
-      gap: 16px;
-      padding: 14px;
-      position: relative;
-      z-index: 1;
-    }
-    .panel {
-      border: 1px solid rgba(255,255,255,.22);
-      border-radius: 26px;
-      background: rgba(255, 255, 255, .18);
-      box-shadow: 0 28px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.2);
-      backdrop-filter: blur(14px);
-      overflow: hidden;
-    }
-    .game-panel { padding: 14px; display: flex; flex-direction: column; min-width: 0; }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-    h1 { margin: 0; font-size: clamp(22px, 3vw, 36px); line-height: 1; letter-spacing: -1px; }
-    .subtitle { margin-top: 6px; color: #d1fae5; font-size: 14px; }
-    .title-glow {
-      background: linear-gradient(90deg, #fff7ad, #7dd3fc, #f0abfc, #fff7ad);
-      background-size: 240% auto;
-      -webkit-background-clip: text;
-      color: transparent;
-      animation: shine 4s linear infinite;
-    }
-    @keyframes shine { to { background-position: 240% center; } }
-    .badges { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
-    .badge {
-      padding: 8px 11px;
-      border-radius: 999px;
-      font-weight: 900;
-      font-size: 14px;
-      background: linear-gradient(135deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
-      border: 1px solid rgba(255,255,255,.26);
-      box-shadow: inset 0 1px rgba(255,255,255,.35);
-      white-space: nowrap;
-    }
-    .badge.yellow { color: #201400; background: linear-gradient(135deg, #fde047, #fb923c); }
-    .badge.blue { background: linear-gradient(135deg, #38bdf8, #2563eb); }
-    .badge.green { color: #052e16; background: linear-gradient(135deg, #86efac, #22c55e); }
-
-    .board-wrap { flex: 1; display: grid; place-items: center; min-height: 0; }
-    #board {
-      position: relative;
-      width: min(100%, calc((100vh - 124px) * 1.4));
-      aspect-ratio: 21 / 15;
-      border-radius: 24px;
-      overflow: hidden;
-      border: 6px solid #fde047;
-      box-shadow: 0 24px 70px rgba(0,0,0,.38), 0 0 0 8px rgba(255,255,255,.25), 0 0 42px rgba(250,204,21,.45), inset 0 0 30px rgba(255,255,255,.22);
-      background: #67e8f9;
-    }
-    .cell { position:absolute; width: calc(100% / 21); height: calc(100% / 15); }
-    .road {
-      background: linear-gradient(135deg, #f6b35d, #fcd34d);
-      background-image:
-        linear-gradient(90deg, rgba(255,255,255,.12) 0 2px, transparent 2px),
-        linear-gradient(rgba(255,255,255,.10) 0 2px, transparent 2px);
-      background-size: 26px 26px;
-    }
-    .grass {
-      background: linear-gradient(135deg, #4ade80, #22c55e);
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,.05);
-    }
-    .grass::after {
-      content:""; position:absolute; inset: 5px; border-radius: 8px;
-      background: radial-gradient(circle at 20% 30%, rgba(255,255,255,.18), transparent 18%);
-      opacity:.55;
-    }
-    .sprite {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: calc(100% / 21);
-      height: calc(100% / 15);
-      display:grid; place-items:center;
-      font-size: clamp(20px, 2.8vw, 34px);
-      filter: drop-shadow(0 8px 10px rgba(0,0,0,.32));
-      transition: transform .28s cubic-bezier(.16, 1, .3, 1), opacity .2s ease, filter .2s ease;
-      will-change: transform;
-      z-index: 5;
-    }
-    .player { animation: carBounce .55s ease-in-out infinite alternate; }
-    .enemy { animation: enemyPulse .7s ease-in-out infinite alternate; }
-    @keyframes carBounce { from { margin-top: 0; } to { margin-top: -2px; } }
-    @keyframes enemyPulse { from { scale: 1; } to { scale: 1.06; } }
-    .flag { animation: pop 1.1s infinite ease-in-out; z-index:4; filter: drop-shadow(0 0 10px rgba(255,255,0,.9)); }
-    @keyframes pop { 0%,100%{ transform: scale(1) rotate(-4deg);} 50%{ transform: scale(1.25) rotate(5deg);} }
-    .enemy.frozen { opacity:.42; filter: grayscale(1) drop-shadow(0 6px 7px rgba(0,0,0,.35)); }
-    .smoke {
-      position:absolute; z-index:3;
-      width: calc(100% / 21 * 1.75);
-      height: calc(100% / 15 * 1.2);
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(255,255,255,.95), rgba(232,240,255,.8) 48%, rgba(255,255,255,0) 78%);
-      filter: blur(2px);
-      animation: puff .8s ease-out infinite alternate;
-      pointer-events:none;
-    }
-    @keyframes puff { to { transform: scale(1.14); opacity:.72; } }
-    .sparkle {
-      position:absolute; z-index:2; color:#fff176; font-size:18px; animation: twinkle 1s infinite alternate;
-    }
-    @keyframes twinkle { to { transform: scale(1.3) rotate(20deg); opacity:.55; } }
-
-    aside { padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-    .side-card {
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(255,255,255,.28), rgba(255,255,255,.12));
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 16px;
-      box-shadow: inset 0 1px rgba(255,255,255,.18);
-    }
-    .side-card.light { background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(236,253,245,.94)); color:#172033; }
-    .side-card h2 { margin: 0 0 10px; font-size: 21px; }
-    .hint { color:#d1fae5; font-size:14px; line-height:1.55; }
-    .light .hint { color:#475569; }
-    .fuel-box { margin-top: 12px; }
-    .fuel-track { height: 18px; background: rgba(255,255,255,.18); border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,.2); }
-    #fuelBar { height:100%; width:100%; background: linear-gradient(90deg, #22c55e, #fde047, #f97316); border-radius:999px; transition: width .2s; }
-    .controls { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; width:190px; margin: 10px auto; }
-    button {
-      border: 0;
-      border-radius: 15px;
-      padding: 11px 12px;
-      font-weight: 900;
-      cursor: pointer;
-      color: #fff;
-      background: linear-gradient(135deg, #2563eb, #7c3aed);
-      box-shadow: 0 10px 22px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.25);
-      transition: transform .1s, filter .1s;
-    }
-    button:hover { transform: translateY(-1px); filter: brightness(1.08); }
-    button:active { transform: translateY(1px) scale(.98); }
-    .controls button { min-height: 42px; font-size: 18px; }
-    .wide { width:100%; margin-top:8px; }
-    .smoke-btn { background: linear-gradient(135deg, #334155, #0f172a); }
-    .reset-btn { background: linear-gradient(135deg, #f97316, #db2777); }
-    .message {
-      border-radius: 16px;
-      padding: 13px;
-      color:#052e16;
-      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
-      font-weight:800;
-      line-height:1.45;
-      min-height: 70px;
-    }
-    .list { margin: 0; padding-left: 18px; font-size:14px; line-height:1.7; }
-
-    .modal {
-      position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:18px;
-      background: rgba(0,0,0,.68); z-index:20; backdrop-filter: blur(5px);
-    }
-    .modal.show { display:flex; }
-    .mission-card {
-      width:min(520px, 96%);
-      border-radius: 28px;
-      background: linear-gradient(180deg, #ffffff, #e0f2fe);
-      color:#111827;
-      padding: 22px;
-      box-shadow: 0 30px 80px rgba(0,0,0,.5), 0 0 0 8px rgba(255,255,255,.18);
-      animation: modalIn .25s ease-out;
-    }
-    @keyframes modalIn { from { transform: scale(.92) translateY(14px); opacity:0; } to { transform: scale(1); opacity:1; } }
-    .mission-tag { display:inline-block; padding:7px 11px; border-radius:999px; background:#10b981; color:#fff; font-weight:900; }
-    .mission-title { font-size:26px; margin:12px 0 6px; font-weight:1000; }
-    .formula {
-      margin: 14px 0;
-      padding: 18px;
-      border-radius: 20px;
-      text-align:center;
-      font-size: clamp(30px, 5vw, 46px);
-      font-weight:1000;
-      color:#78350f;
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      border: 2px dashed #f59e0b;
-    }
-    .choices { display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; }
-    .choices button { color:#111827; font-size:20px; background: linear-gradient(135deg, #ffffff, #c7d2fe); border:1px solid #c4b5fd; }
-    .end-title { text-align:center; font-size:34px; margin:8px 0; font-weight:1000; }
-    .end-emoji { text-align:center; font-size:74px; }
-
-    @media (max-width: 900px) {
-      .wrap { height: auto; min-height: 100vh; grid-template-columns: 1fr; padding-bottom: 16px; }
-      aside { display:grid; grid-template-columns: 1fr 1fr; }
-      #board { width: min(100%, 760px); }
-    }
-    @media (pointer: coarse) {
-      .wrap { gap: 10px; }
-      .game-panel { padding: 10px; }
-      #board { width: min(100%, calc(100vh * 1.18)); max-height: 58vh; }
-      button { min-height: 48px; font-size: 17px; }
-      .controls { width: min(260px, 100%); gap: 10px; }
-      .controls button { min-height: 54px; font-size: 22px; }
-      .wide { min-height: 52px; }
-    }
-    @media (max-width: 620px) {
-      .wrap { padding: 8px; gap: 8px; }
-      header { align-items:flex-start; flex-direction:column; }
-      aside { grid-template-columns: 1fr; padding: 10px; }
-      .badges { justify-content:flex-start; }
-      .choices { grid-template-columns:1fr; }
-      .subtitle { font-size:12px; }
-      #board { max-height: 50vh; }
-    }
-    @media (orientation: landscape) and (max-height: 620px) {
-      .wrap { grid-template-columns: 1fr 330px; height: 100vh; overflow: hidden; }
-      aside { display:flex; padding: 10px; overflow:auto; }
-      header { margin-bottom: 6px; }
-      h1 { font-size: 23px; }
-      .subtitle { font-size: 12px; }
-      #board { width: min(100%, calc((100vh - 88px) * 1.4)); max-height: calc(100vh - 88px); }
-      .side-card { padding: 11px; }
+    .animate-shake { animation: shake 0.3s ease-in-out; }
+    
+    .map-bg {
+      background-image: radial-gradient(circle at center, #475569 2px, transparent 2px);
+      background-size: 24px 24px;
     }
   </style>
 </head>
-<body>
-  <div class="stars"></div>
-  <div class="wrap">
-    <main class="panel game-panel">
-      <header>
-        <div>
-          <h1><span>🚙</span> <span class="title-glow">방구차 수학 미션</span></h1>
-          <div class="subtitle">초등 4학년 1학기 3단원 · 세 자리 수의 곱셈과 나눗셈</div>
+<body class="bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900 via-slate-900 to-black text-white selection:bg-fuchsia-500/30">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    const GRID_COLS = 21;
+    const GRID_ROWS = 15;
+
+    // 막힌 곳이 전~혀 없는 완벽한 대칭형 미로 설계!
+    const RAW_MAP = [
+      "#####################",
+      "#.........#.........#",
+      "#.###.###.#.###.###.#",
+      "#.#...#.......#...#.#",
+      "#.###.#.#####.#.###.#",
+      "#.........#.........#",
+      "###.###.#####.###.###",
+      "#...................#",
+      "###.###.#####.###.###",
+      "#.........#.........#",
+      "#.###.#.#####.#.###.#",
+      "#.#...#.......#...#.#",
+      "#.###.###.#.###.###.#",
+      "#.........#.........#",
+      "#####################"
+    ];
+
+    const MISSIONS = [
+      { title: '세 자리 수 x 한 자리 수', story: '216을 3배 하면 얼마일까요?', formula: '216 × 3', answer: 648, hint: '200×3, 10×3, 6×3을 각각 더해보세요.', choices: [648, 638, 658, 628] },
+      { title: '나머지가 있는 나눗셈', story: '75를 8로 나누면 나머지는?', formula: '75 ÷ 8 = 9 ... ?', answer: 3, hint: '8×9=72 이므로 75-72를 계산하세요.', choices: [3, 2, 4, 5] },
+      { title: '몇십을 곱하기', story: '딸기 134kg씩 20일 동안 수확했습니다.', formula: '134 × 20', answer: 2680, hint: '134×2를 먼저 하고 뒤에 0을 붙여요.', choices: [2680, 2608, 2480, 2740] },
+      { title: '세 자리 수 x 두 자리 수', story: '152L씩 24주 동안 절약했습니다.', formula: '152 × 24', answer: 3648, hint: '152×20과 152×4를 더해보세요.', choices: [3648, 3528, 3608, 3448] },
+      { title: '나눗셈의 몫', story: '사과 160개를 20개씩 묶으면 몇 봉지일까요?', formula: '160 ÷ 20', answer: 8, hint: '16÷2를 생각해보세요.', choices: [8, 7, 9, 6] },
+      { title: '복합 곱셈 미션', story: '217원짜리 사탕을 35개 샀습니다.', formula: '217 × 35', answer: 7595, hint: '217×30=6510, 217×5=1085 입니다.', choices: [7595, 7495, 7605, 8015] }
+    ];
+
+    // 새 지도에 맞춘 깃발 위치
+    const FLAGS_POS = [
+      {x: 1, y: 1}, {x: 19, y: 1}, {x: 10, y: 3}, {x: 5, y: 5}, {x: 15, y: 5}, 
+      {x: 10, y: 7}, {x: 5, y: 9}, {x: 15, y: 9}, {x: 1, y: 13}, {x: 19, y: 13}
+    ];
+
+    const playSound = (type) => {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const now = ctx.currentTime;
+        
+        if (type === 'correct') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.setValueAtTime(554.37, now + 0.1);
+          osc.frequency.setValueAtTime(659.25, now + 0.2);
+          osc.frequency.setValueAtTime(880, now + 0.3);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+          osc.start(now); osc.stop(now + 0.6);
+        } else if (type === 'wrong') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+          osc.start(now); osc.stop(now + 0.4);
+        } else if (type === 'smoke') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.exponentialRampToValueAtTime(10, now + 0.3);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now); osc.stop(now + 0.3);
+        } else if (type === 'crash') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(100, now);
+          osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+          gain.gain.setValueAtTime(0.6, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+          osc.start(now); osc.stop(now + 0.5);
+        } else if (type === 'win') {
+          osc.type = 'sine';
+          [523.25, 659.25, 783.99, 1046.50, 1318.51, 1567.98].forEach((freq, i) => {
+            osc.frequency.setValueAtTime(freq, now + i * 0.15);
+          });
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 1.2);
+          osc.start(now); osc.stop(now + 1.2);
+        }
+      } catch (e) {}
+    };
+
+    const Confetti = () => {
+      const colors = ['#fde047', '#38bdf8', '#f472b6', '#4ade80', '#c084fc', '#fb923c'];
+      return (
+        <div className="absolute inset-0 pointer-events-none z-[100] overflow-hidden">
+          {Array.from({ length: 120 }).map((_, i) => {
+            const style = {
+              left: `${Math.random() * 100}%`,
+              top: `-10%`,
+              backgroundColor: colors[Math.floor(Math.random() * colors.length)],
+              width: `${Math.random() * 12 + 8}px`,
+              height: `${Math.random() * 18 + 10}px`,
+              animation: `confetti-fall ${Math.random() * 2 + 1.5}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`,
+              animationDelay: `${Math.random() * 0.2}s`,
+              transform: `rotate(${Math.random() * 360}deg)`
+            };
+            return <div key={i} className="absolute rounded-sm shadow-[0_0_10px_rgba(255,255,255,0.8)]" style={style} />
+          })}
+          <style>{`
+            @keyframes confetti-fall {
+              0% { transform: translateY(0) rotate(0deg) scale(1.2); opacity: 1; }
+              100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; }
+            }
+          `}</style>
         </div>
-        <div class="badges">
-          <div class="badge yellow">점수 <span id="score">0</span></div>
-          <div class="badge blue">목숨 <span id="lives">3</span></div>
-          <div class="badge green">깃발 <span id="flags">0</span>/10</div>
-        </div>
-      </header>
-      <div class="board-wrap">
-        <div id="board">
-          <div id="modal" class="modal"></div>
+      );
+    };
+
+    const StatBadge = ({ icon, label, value, color }) => (
+      <div className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 rounded-2xl ${color} border-2 border-white/10 shadow-lg backdrop-blur-md transform transition hover:scale-105`}>
+        <span className="text-2xl drop-shadow-md">{icon}</span>
+        <div className="flex flex-col">
+          <span className="text-[11px] font-black uppercase text-white/60 leading-none mb-1 tracking-wider">{label}</span>
+          <span className="text-lg font-black leading-none">{value}</span>
         </div>
       </div>
-    </main>
+    );
 
-    <aside class="panel">
-      <section class="side-card">
-        <h2>⚡ 조작 방법</h2>
-        <div class="hint">방향키로 이동하고, 스페이스바 또는 연막 버튼으로 추격차를 잠시 멈추게 하세요.</div>
-        <div class="controls">
-          <div></div><button onclick="setDirection('up')">▲</button><div></div>
-          <button onclick="setDirection('left')">◀</button><button onclick="setDirection('down')">▼</button><button onclick="setDirection('right')">▶</button>
+    const ControlBtn = ({ icon, onClick, extraClass = "" }) => (
+      <button 
+        onMouseDown={onClick}
+        onTouchStart={(e) => { e.preventDefault(); onClick(); }}
+        className={`w-full aspect-square bg-gradient-to-b from-slate-700 to-slate-800 hover:from-blue-600 hover:to-blue-800 active:from-blue-500 active:to-blue-700 border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 rounded-2xl flex items-center justify-center text-white transition-all shadow-[0_5px_15px_rgba(0,0,0,0.5)] text-3xl font-black ${extraClass}`}
+      >
+        {icon}
+      </button>
+    );
+
+    const App = () => {
+      const [gameState, setGameState] = useState('START');
+      const [score, setScore] = useState(0);
+      const [lives, setLives] = useState(3);
+      const [fuel, setFuel] = useState(100);
+      const [collectedFlags, setCollectedFlags] = useState([]);
+      const [activeMission, setActiveMission] = useState(null);
+      const [message, setMessage] = useState('깃발을 모아 수학 미션을 해결하세요!');
+      const [showConfetti, setShowConfetti] = useState(false);
+      const [isShaking, setIsShaking] = useState(false);
+
+      // 플레이어는 중앙 아래, 적군은 양쪽 위 모서리에서 시작!
+      const playerRef = useRef({ x: 10, y: 11, gridX: 10, gridY: 11, dir: 'up', nextDir: 'up', angle: 270 });
+      const enemiesRef = useRef([
+        { x: 1, y: 1, gridX: 1, gridY: 1, dir: 'right', frozen: 0 },
+        { x: 19, y: 1, gridX: 19, gridY: 1, dir: 'left', frozen: 0 }
+      ]);
+      const smokesRef = useRef([]);
+      const requestRef = useRef();
+      const lastTimeRef = useRef();
+
+      const triggerShake = () => {
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 300);
+      };
+
+      const isWall = (x, y) => {
+        const gx = Math.round(x); const gy = Math.round(y);
+        return RAW_MAP[gy]?.[gx] === '#';
+      };
+
+      const resetGame = () => {
+        playerRef.current = { x: 10, y: 11, gridX: 10, gridY: 11, dir: 'up', nextDir: 'up', angle: 270 };
+        enemiesRef.current = [
+          { x: 1, y: 1, gridX: 1, gridY: 1, dir: 'right', frozen: 0 },
+          { x: 19, y: 1, gridX: 19, gridY: 1, dir: 'left', frozen: 0 }
+        ];
+        smokesRef.current = [];
+        setScore(0); setLives(3); setFuel(100); setCollectedFlags([]);
+        setGameState('PLAYING'); setShowConfetti(false);
+        setMessage('행운을 빌어요! 방향키로 운전하세요.');
+      };
+
+      const handleAction = (type) => {
+        if (gameState !== 'PLAYING') return;
+        if (type === 'smoke') {
+          if (fuel >= 10) {
+            setFuel(prev => Math.max(0, prev - 10));
+            smokesRef.current.push({ x: Math.round(playerRef.current.x), y: Math.round(playerRef.current.y), life: 100 });
+            playSound('smoke');
+            triggerShake();
+            setMessage('🔥 뿡! 연막을 뿌려 경찰차를 따돌렸어요!');
+          }
+        } else {
+          playerRef.current.nextDir = type;
+        }
+      };
+
+      const solveMission = (choice) => {
+        if (choice === activeMission.answer) {
+          setScore(prev => prev + 1000 + Math.floor(fuel * 20)); // 점수를 크게!
+          setGameState('PLAYING'); setActiveMission(null);
+          playSound('correct'); setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 3000);
+          setMessage('✨ 정답입니다! 완벽해요!');
+        } else {
+          setFuel(prev => Math.max(0, prev - 15));
+          playSound('wrong');
+          triggerShake();
+          setMessage(`💥 틀렸습니다! 힌트: ${activeMission.hint}`);
+        }
+      };
+
+      const update = useCallback((time) => {
+        if (lastTimeRef.current === undefined) lastTimeRef.current = time;
+        const deltaTime = time - lastTimeRef.current;
+        lastTimeRef.current = time;
+
+        if (gameState === 'PLAYING') {
+          const speed = 0.085; // 속도 약간 상향
+          const p = playerRef.current;
+          const isAtGridCenter = Math.abs(p.x - p.gridX) < 0.1 && Math.abs(p.y - p.gridY) < 0.1;
+
+          if (isAtGridCenter) {
+            p.x = p.gridX; p.y = p.gridY;
+            const nd = p.nextDir;
+            let dx = 0, dy = 0;
+            if (nd === 'up') dy = -1; if (nd === 'down') dy = 1;
+            if (nd === 'left') dx = -1; if (nd === 'right') dx = 1;
+
+            if (!isWall(p.gridX + dx, p.gridY + dy)) p.dir = nd;
+
+            let targetX = p.gridX, targetY = p.gridY;
+            if (p.dir === 'up') targetY--; if (p.dir === 'down') targetY++;
+            if (p.dir === 'left') targetX--; if (p.dir === 'right') targetX++;
+
+            if (!isWall(targetX, targetY)) { p.gridX = targetX; p.gridY = targetY; }
+          }
+
+          if (p.x < p.gridX) p.x = Math.min(p.gridX, p.x + speed);
+          if (p.x > p.gridX) p.x = Math.max(p.gridX, p.x - speed);
+          if (p.y < p.gridY) p.y = Math.min(p.gridY, p.y + speed);
+          if (p.y > p.gridY) p.y = Math.max(p.gridY, p.y - speed);
+
+          p.angle = p.dir === 'right' ? 0 : p.dir === 'down' ? 90 : p.dir === 'left' ? 180 : 270;
+
+          setFuel(f => {
+            const nextFuel = f - 0.015; // 연료 감소 속도 완화 (어린이 배려)
+            if (f > 0 && nextFuel <= 0) { setGameState('GAMEOVER'); playSound('wrong'); triggerShake(); }
+            return nextFuel;
+          });
+
+          const currentGridX = Math.round(p.x); const currentGridY = Math.round(p.y);
+          const flagIdx = FLAGS_POS.findIndex(f => f.x === currentGridX && f.y === currentGridY);
+          if (flagIdx !== -1 && !collectedFlags.includes(flagIdx)) {
+            const newFlags = [...collectedFlags, flagIdx];
+            setCollectedFlags(newFlags); playSound('correct');
+            if (newFlags.length === FLAGS_POS.length) {
+              setGameState('WIN'); playSound('win');
+            } else {
+              setActiveMission(MISSIONS[flagIdx % MISSIONS.length]); setGameState('MISSION');
+            }
+          }
+
+          smokesRef.current = smokesRef.current.map(s => ({ ...s, life: s.life - 1.5 })).filter(s => s.life > 0);
+
+          enemiesRef.current.forEach(e => {
+            if (e.frozen > 0) { e.frozen--; return; }
+            if (smokesRef.current.some(s => Math.round(s.x) === Math.round(e.x) && Math.round(s.y) === Math.round(e.y))) {
+              e.frozen = 100; return;
+            }
+
+            const isEAtCenter = Math.abs(e.x - e.gridX) < 0.1 && Math.abs(e.y - e.gridY) < 0.1;
+            if (isEAtCenter) {
+              e.x = e.gridX; e.y = e.gridY;
+              const possibleDirs = ['up', 'down', 'left', 'right'].filter(d => {
+                let dx = 0, dy = 0;
+                if (d === 'up') dy = -1; if (d === 'down') dy = 1;
+                if (d === 'left') dx = -1; if (d === 'right') dx = 1;
+                return !isWall(e.gridX + dx, e.gridY + dy);
+              });
+              
+              possibleDirs.sort((a, b) => {
+                const getDist = (d) => {
+                  let dx = 0, dy = 0;
+                  if (d === 'up') dy = -1; if (d === 'down') dy = 1;
+                  if (d === 'left') dx = -1; if (d === 'right') dx = 1;
+                  return Math.abs((e.gridX + dx) - p.x) + Math.abs((e.gridY + dy) - p.y);
+                };
+                return getDist(a) - getDist(b);
+              });
+
+              e.dir = Math.random() < 0.65 ? possibleDirs[0] : possibleDirs[Math.floor(Math.random() * possibleDirs.length)];
+
+              let tx = e.gridX, ty = e.gridY;
+              if (e.dir === 'up') ty--; if (e.dir === 'down') ty++;
+              if (e.dir === 'left') tx--; if (e.dir === 'right') tx++;
+              e.gridX = tx; e.gridY = ty;
+            }
+
+            const eSpeed = 0.055;
+            if (e.x < e.gridX) e.x = Math.min(e.gridX, e.x + eSpeed);
+            if (e.x > e.gridX) e.x = Math.max(e.gridX, e.x - eSpeed);
+            if (e.y < e.gridY) e.y = Math.min(e.gridY, e.y + eSpeed);
+            if (e.y > e.gridY) e.y = Math.max(e.gridY, e.y - eSpeed);
+
+            const dist = Math.sqrt(Math.pow(e.x - p.x, 2) + Math.pow(e.y - p.y, 2));
+            if (dist < 0.6) {
+              setLives(l => {
+                if (l <= 1) { setGameState('GAMEOVER'); playSound('wrong'); }
+                else { playSound('crash'); }
+                return l - 1;
+              });
+              triggerShake();
+              p.x = 10; p.y = 11; p.gridX = 10; p.gridY = 11; p.dir = 'up'; p.nextDir = 'up'; p.angle = 270;
+              enemiesRef.current = [
+                { x: 1, y: 1, gridX: 1, gridY: 1, dir: 'right', frozen: 0 },
+                { x: 19, y: 1, gridX: 19, gridY: 1, dir: 'left', frozen: 0 }
+              ];
+              setMessage('🚨 앗! 경찰차에 부딪혔어요!');
+            }
+          });
+        }
+
+        requestRef.current = requestAnimationFrame(update);
+      }, [gameState, collectedFlags, fuel]);
+
+      useEffect(() => {
+        requestRef.current = requestAnimationFrame(update);
+        return () => cancelAnimationFrame(requestRef.current);
+      }, [update]);
+
+      useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (gameState !== 'PLAYING') return;
+          if (e.key === 'ArrowUp') playerRef.current.nextDir = 'up';
+          if (e.key === 'ArrowDown') playerRef.current.nextDir = 'down';
+          if (e.key === 'ArrowLeft') playerRef.current.nextDir = 'left';
+          if (e.key === 'ArrowRight') playerRef.current.nextDir = 'right';
+          if (e.key === ' ') handleAction('smoke');
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [gameState]);
+
+      return (
+        <div className={`min-h-screen flex flex-col items-center p-2 sm:p-4 overflow-hidden relative ${isShaking ? 'animate-shake' : ''}`}>
+          {showConfetti && <Confetti />}
+          
+          {/* Header Info */}
+          <div className="w-full max-w-[1400px] flex flex-col md:flex-row justify-between items-center gap-4 mb-4 sm:mb-6 bg-slate-900/60 p-5 rounded-3xl border border-white/20 backdrop-blur-xl z-10 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-fuchsia-500 to-indigo-600 p-3 rounded-2xl text-3xl shadow-[0_0_20px_rgba(217,70,239,0.5)] animate-pulse">⚡</div>
+              <div>
+                <h1 className="title-font text-2xl sm:text-3xl font-black bg-gradient-to-r from-fuchsia-400 via-cyan-400 to-emerald-400 bg-clip-text text-transparent leading-none drop-shadow-md">
+                  방구차 수학 어드벤처
+                </h1>
+                <p className="text-sm text-cyan-300 font-bold mt-1 uppercase tracking-widest">초등학교 4학년 수학 미션</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-4">
+              <StatBadge icon="🏆" label="Score" value={Math.floor(score)} color="bg-gradient-to-br from-yellow-500/20 to-orange-500/20" />
+              <StatBadge icon="❤️" label="Lives" value={lives} color="bg-gradient-to-br from-rose-500/20 to-pink-500/20" />
+              <StatBadge icon="🚩" label="Flags" value={`${collectedFlags.length}/${FLAGS_POS.length}`} color="bg-gradient-to-br from-blue-500/20 to-cyan-500/20" />
+            </div>
+          </div>
+
+          <div className="w-full max-w-[1400px] flex flex-col lg:grid lg:grid-cols-12 gap-4 lg:gap-8 items-start z-10">
+            {/* Game Area */}
+            <div className="w-full lg:col-span-9 order-1 relative aspect-[21/15] bg-slate-900 map-bg rounded-[2rem] overflow-hidden border-[6px] border-indigo-500 shadow-[0_0_50px_rgba(99,102,241,0.4)]">
+              <div 
+                className="absolute inset-0 grid"
+                style={{ gridTemplateColumns: `repeat(${GRID_COLS}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${GRID_ROWS}, minmax(0, 1fr))` }}
+              >
+                {RAW_MAP.map((row, y) => row.split('').map((cell, x) => (
+                  <div key={`${x}-${y}`} className={`${cell === '#' ? 'bg-indigo-600/90 border-2 border-cyan-400/50 rounded-lg shadow-[inset_0_0_15px_rgba(6,182,212,0.8)] m-[2px]' : ''}`} />
+                )))}
+              </div>
+
+              {smokesRef.current.map((s, i) => (
+                <div key={`smoke-${i}`} className="absolute bg-white/70 rounded-full blur-md animate-ping"
+                  style={{ width: '6%', height: '8%', left: `${(s.x - 0.5) * (100 / 21)}%`, top: `${(s.y - 0.5) * (100 / 15)}%`, opacity: s.life / 100 }} />
+              ))}
+
+              {FLAGS_POS.map((f, i) => !collectedFlags.includes(i) && (
+                <div key={`flag-${i}`} className="absolute flex items-center justify-center animate-bounce"
+                  style={{ width: '4.7%', height: '6.6%', left: `${f.x * (100 / 21)}%`, top: `${f.y * (100 / 15)}%`, zIndex: 10 }}>
+                  <span className="text-3xl drop-shadow-[0_0_15px_rgba(250,204,21,1)]">🚩</span>
+                </div>
+              ))}
+
+              {enemiesRef.current.map((e, i) => (
+                <div key={`enemy-${i}`} className={`absolute flex items-center justify-center transition-all duration-300`}
+                  style={{ width: '4.7%', height: '6.6%', left: `${e.x * (100 / 21)}%`, top: `${e.y * (100 / 15)}%`, zIndex: 20 }}>
+                  <div className={`relative ${e.frozen > 0 ? 'opacity-50 grayscale' : 'drop-shadow-[0_0_15px_rgba(239,68,68,0.8)]'}`}>
+                    <span className="text-4xl">🚓</span>
+                    {!e.frozen && <div className="absolute -top-1 left-0 w-3 h-3 rounded-full bg-red-500 animate-ping shadow-[0_0_10px_red]"></div>}
+                    {!e.frozen && <div className="absolute -top-1 right-0 w-3 h-3 rounded-full bg-blue-500 animate-ping shadow-[0_0_10px_blue]" style={{animationDelay: '0.2s'}}></div>}
+                  </div>
+                </div>
+              ))}
+
+              <div className="absolute flex items-center justify-center z-30"
+                style={{ width: '4.7%', height: '6.6%', left: `${playerRef.current.x * (100 / 21)}%`, top: `${playerRef.current.y * (100 / 15)}%`, transform: `rotate(${playerRef.current.angle}deg)`, transition: 'transform 0.15s ease-out' }}>
+                <div className="relative">
+                  <span className="text-4xl drop-shadow-[0_0_20px_rgba(56,189,248,1)]">🏎️</span>
+                  <div className="absolute -left-3 bottom-2 w-4 h-4 bg-orange-500 rounded-full animate-pulse blur-sm"></div>
+                </div>
+              </div>
+
+              {gameState === 'START' && (
+                <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 text-center">
+                  <div className="mb-6 bg-gradient-to-tr from-fuchsia-600 to-blue-600 p-6 rounded-full border-4 border-white/30 animate-bounce text-6xl shadow-[0_0_40px_rgba(217,70,239,0.8)]">🏎️</div>
+                  <h2 className="title-font text-5xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-500 drop-shadow-lg">준비되셨나요?</h2>
+                  <p className="text-xl text-cyan-100 mb-8 max-w-md font-bold leading-relaxed">멋진 레이싱카를 조종해 깃발을 모으고,<br/>경찰차를 피해 곱셈 미션을 해결하세요!</p>
+                  <button onClick={resetGame} className="px-14 py-5 bg-gradient-to-b from-emerald-400 to-emerald-600 hover:from-emerald-300 hover:to-emerald-500 border-b-4 border-emerald-800 active:border-b-0 active:translate-y-1 rounded-2xl font-black text-2xl transition-all shadow-[0_10px_20px_rgba(16,185,129,0.5)] flex items-center gap-3 text-white title-font">
+                    ▶️ 게임 시작하기!
+                  </button>
+                </div>
+              )}
+
+              {gameState === 'MISSION' && activeMission && (
+                <div className="absolute inset-0 bg-indigo-950/90 backdrop-blur-md z-50 flex items-center justify-center p-6">
+                  <div className="bg-gradient-to-b from-white to-slate-100 text-slate-900 w-full max-w-lg rounded-[2.5rem] p-8 shadow-[0_0_50px_rgba(255,255,255,0.3)] border-8 border-cyan-400 animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center justify-center gap-2 mb-2 text-fuchsia-600 font-black text-lg">
+                      <span className="animate-bounce">❓</span> <span className="uppercase tracking-wider">{activeMission.title}</span>
+                    </div>
+                    <h3 className="text-2xl font-black mb-4 text-center text-slate-800 leading-snug">{activeMission.story}</h3>
+                    <div className="bg-slate-800 p-6 rounded-3xl text-center my-6 border-4 border-slate-700 shadow-inner">
+                      <span className="title-font text-5xl text-yellow-400 tracking-widest">{activeMission.formula}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {activeMission.choices.map((c, i) => (
+                        <button key={i} onClick={() => solveMission(c)} className="py-5 bg-gradient-to-b from-blue-100 to-blue-200 hover:from-blue-500 hover:to-blue-600 hover:text-white rounded-2xl font-black text-3xl transition-all border-b-4 border-blue-300 hover:border-blue-700 active:border-b-0 active:translate-y-1 shadow-md text-blue-900">
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {(gameState === 'GAMEOVER' || gameState === 'WIN') && (
+                <div className="absolute inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-8 text-center">
+                  <div className={`text-9xl mb-6 ${gameState === 'WIN' ? 'animate-bounce drop-shadow-[0_0_30px_rgba(250,204,21,0.8)]' : 'animate-shake'}`}>
+                    {gameState === 'WIN' ? '🏆' : '💥'}
+                  </div>
+                  <h2 className="title-font text-6xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500">
+                    {gameState === 'WIN' ? '미션 대성공!' : '게임 오버!'}
+                  </h2>
+                  <p className="text-slate-300 mb-10 font-bold text-2xl">최종 점수: <span className="text-yellow-400 text-4xl ml-2 font-black">{Math.floor(score)}</span> 점</p>
+                  <button onClick={resetGame} className="px-12 py-5 bg-gradient-to-b from-fuchsia-500 to-fuchsia-700 hover:from-fuchsia-400 hover:to-fuchsia-600 border-b-4 border-fuchsia-900 active:border-b-0 active:translate-y-1 rounded-2xl font-black text-2xl transition-all shadow-[0_10px_20px_rgba(217,70,239,0.5)] flex items-center gap-3 text-white title-font">
+                    🔄 다시 도전하기!
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar & Controls */}
+            <div className="w-full lg:col-span-3 order-2 space-y-4 lg:space-y-6">
+              <div className="bg-gradient-to-br from-indigo-800 to-purple-900 border-2 border-indigo-400 p-5 rounded-3xl flex items-start gap-3 shadow-[0_10px_20px_rgba(0,0,0,0.4)]">
+                <span className="text-2xl animate-pulse">📢</span>
+                <p className="font-bold text-base leading-relaxed text-indigo-100">{message}</p>
+              </div>
+
+              <div className="bg-slate-900 border-2 border-slate-700 p-5 rounded-3xl shadow-[0_10px_20px_rgba(0,0,0,0.4)]">
+                <div className="flex justify-between items-end mb-3">
+                  <span className="text-sm font-black uppercase text-slate-400 tracking-widest">부스터 연료</span>
+                  <span className={`text-2xl font-black ${fuel < 30 ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>{Math.floor(fuel)}%</span>
+                </div>
+                <div className="h-6 bg-slate-800 rounded-full overflow-hidden border-2 border-slate-950 shadow-inner">
+                  <div className={`h-full transition-all duration-300 ${fuel < 30 ? 'bg-gradient-to-r from-red-600 to-orange-500' : 'bg-gradient-to-r from-emerald-500 to-cyan-400'}`} style={{ width: `${fuel}%` }} />
+                </div>
+              </div>
+
+              <div className="bg-slate-900 border-2 border-slate-700 p-6 rounded-3xl shadow-[0_10px_20px_rgba(0,0,0,0.4)]">
+                <div className="grid grid-cols-3 gap-3 max-w-[180px] mx-auto mb-6">
+                  <div />
+                  <ControlBtn icon="⬆️" onClick={() => handleAction('up')} />
+                  <div />
+                  <ControlBtn icon="⬅️" onClick={() => handleAction('left')} />
+                  <ControlBtn icon="⬇️" onClick={() => handleAction('down')} />
+                  <ControlBtn icon="➡️" onClick={() => handleAction('right')} />
+                </div>
+                <button onClick={() => handleAction('smoke')} className="w-full py-4 bg-gradient-to-b from-orange-400 to-red-500 hover:from-orange-300 hover:to-red-400 active:from-orange-500 active:to-red-600 border-b-4 border-red-800 active:border-b-0 active:translate-y-1 rounded-2xl flex items-center justify-center gap-2 font-black text-white transition-all shadow-[0_5px_15px_rgba(239,68,68,0.5)] text-lg">
+                  💨 부스터 연막 발사! (-10%)
+                </button>
+              </div>
+
+              <button onClick={resetGame} className="w-full py-4 bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 active:translate-y-1 rounded-2xl flex items-center justify-center gap-2 font-bold text-slate-300 transition-all text-sm">
+                🔄 게임 다시 시작하기
+              </button>
+            </div>
+          </div>
         </div>
-        <button class="wide smoke-btn" onclick="dropSmoke()">💨 연막 뿌리기</button>
-        <button class="wide reset-btn" onclick="resetGame()">↻ 처음부터 다시</button>
-      </section>
+      );
+    };
 
-      <section class="side-card light">
-        <h2>🧮 학습 미션</h2>
-        <ul class="list">
-          <li>216×3으로 곱셈 준비하기</li>
-          <li>75÷8의 나머지 구하기</li>
-          <li>134×20, 195×50 계산하기</li>
-          <li>152×24처럼 몇십몇 곱하기</li>
-          <li>잘못 계산한 곳 찾기</li>
-        </ul>
-      </section>
-
-      <section class="side-card light">
-        <h2>📢 현재 상황</h2>
-        <div id="message" class="message">깃발을 먹고 수학 미션을 해결하세요!</div>
-        <div class="fuel-box">
-          <strong>⛽ 연료 <span id="fuelText">100</span>%</strong>
-          <div class="fuel-track"><div id="fuelBar"></div></div>
-        </div>
-      </section>
-    </aside>
-  </div>
-
-<script>
-const rawMap = [
-  "#####################",
-  "#.....#.......#.....#",
-  "#.###.#.#####.#.###.#",
-  "#.#...#...#...#...#.#",
-  "#.#.#####.#.#####.#.#",
-  "#...#.....#.....#...#",
-  "###.#.###...###.#.###",
-  "#...#...#...#...#...#",
-  "#.#####.#.#.#.#####.#",
-  "#.....#...#...#.....#",
-  "#.###.#####.#####.###",
-  "#.#...#.......#...#.#",
-  "#.#.###.#####.###.#.#",
-  "#.................#..#",
-  "#####################"
-];
-const COLS = 21, ROWS = 15;
-const dirs = { up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0} };
-const rotations = { right:0, down:90, left:180, up:-90 };
-const startPlayer = { x:1, y:13, dir:'right' };
-const startEnemies = [{x:19,y:1,dir:'left',frozen:0},{x:19,y:13,dir:'up',frozen:0}];
-const flags = [{x:2,y:1},{x:9,y:1},{x:18,y:1},{x:3,y:5},{x:10,y:6},{x:17,y:5},{x:1,y:9},{x:11,y:9},{x:19,y:11},{x:8,y:13}];
-const missions = [
-  { title:'준비하기 곱셈', story:'216을 3배 하면 얼마일까요?', formula:'216 × 3', answer:648, hint:'200×3, 10×3, 6×3을 더해요.', choices:[648,618,638,728] },
-  { title:'나머지 복습', story:'75를 8로 나누면 몫은 9, 나머지는?', formula:'75 ÷ 8 = 9 … ?', answer:3, hint:'8×9=72, 75-72를 계산해요.', choices:[3,2,4,5] },
-  { title:'스마트 팜 딸기 수확', story:'딸기를 하루 134kg씩 20일 동안 생산했어요.', formula:'134 × 20', answer:2680, hint:'134×2를 먼저 하고 10배 하면 돼요.', choices:[2680,2608,2480,1340] },
-  { title:'초콜릿값 계산', story:'1g에 195원인 초콜릿을 50g 샀어요.', formula:'195 × 50', answer:9750, hint:'195×5를 한 뒤 10배 해 보세요.', choices:[9750,9500,9850,8750] },
-  { title:'AI 농장 물 절약', story:'물을 일주일에 152L씩 24주 동안 절약했어요.', formula:'152 × 24', answer:3648, hint:'152×20과 152×4를 더해요.', choices:[3648,3528,3040,608] },
-  { title:'잘못 계산 고치기', story:'217×35를 바르게 계산해요.', formula:'217 × 35', answer:7595, hint:'217×30=6510, 217×5=1085예요.', choices:[7595,6510,1085,7495] }
-];
-let player, direction, enemies, smokes, collected, missionIndex, score, fuel, lives, paused, gameOver, win, tick, timer;
-let touchStartX = 0, touchStartY = 0;
-const board = document.getElementById('board');
-const modal = document.getElementById('modal');
-
-function isWall(x,y){ return rawMap[y]?.[x] === '#'; }
-function cellStyle(x,y){ return `left:${x/COLS*100}%;top:${y/ROWS*100}%`; }
-function moveStyle(x,y,extra=''){ return `transform:translate(${x*100}%, ${y*100}%) ${extra}`; }
-function nextPos(pos, dir){ const d=dirs[dir]; return { ...pos, x:pos.x+d.x, y:pos.y+d.y, dir }; }
-function shuffle(a){ return [...a].sort(()=>Math.random()-.5); }
-function setDirection(d){ direction = d; if (player) player.dir = d; drawSprites(); }
-function msg(t){ document.getElementById('message').textContent = t; }
-function chooseEnemyDir(e){
-  const options = Object.keys(dirs).filter(d => !isWall(e.x+dirs[d].x, e.y+dirs[d].y));
-  options.sort((a,b)=>{
-    const ap=nextPos(e,a), bp=nextPos(e,b);
-    return Math.abs(ap.x-player.x)+Math.abs(ap.y-player.y) - (Math.abs(bp.x-player.x)+Math.abs(bp.y-player.y));
-  });
-  return Math.random() < .75 ? options[0] : options[Math.floor(Math.random()*options.length)];
-}
-function drawBase(){
-  [...board.querySelectorAll('.cell,.sprite,.smoke,.sparkle')].forEach(el=>el.remove());
-  for(let y=0;y<ROWS;y++) for(let x=0;x<COLS;x++){
-    const c = document.createElement('div');
-    c.className = 'cell ' + (rawMap[y][x] === '#' ? 'grass' : 'road');
-    c.style.cssText = cellStyle(x,y);
-    board.appendChild(c);
-  }
-  for(let i=0;i<18;i++){
-    const s=document.createElement('div');
-    s.className='sparkle';
-    s.textContent='✦';
-    s.style.left=(Math.random()*94+2)+'%';
-    s.style.top=(Math.random()*90+4)+'%';
-    s.style.animationDelay=(Math.random()*2)+'s';
-    board.appendChild(s);
-  }
-}
-function drawSprites(){
-  [...board.querySelectorAll('.smoke')].forEach(el=>el.remove());
-
-  flags.forEach((f,i)=>{
-    let el = document.getElementById('flag-'+i);
-    if(collected.includes(i)) { if(el) el.remove(); return; }
-    if(!el){
-      el=document.createElement('div');
-      el.id='flag-'+i;
-      el.className='sprite flag';
-      el.textContent='🚩';
-      board.appendChild(el);
-    }
-    el.style.cssText=moveStyle(f.x,f.y);
-  });
-
-  smokes.forEach((s, i)=>{
-    const el=document.createElement('div');
-    el.className='smoke';
-    el.style.cssText=`left:${(s.x-.36)/COLS*100}%;top:${(s.y-.15)/ROWS*100}%`;
-    board.appendChild(el);
-  });
-
-  enemies.forEach((e,i)=>{
-    let el = document.getElementById('enemy-'+i);
-    if(!el){
-      el=document.createElement('div');
-      el.id='enemy-'+i;
-      el.className='sprite enemy';
-      board.appendChild(el);
-    }
-    el.className='sprite enemy '+(e.frozen>0?'frozen':'');
-    el.textContent=e.frozen>0?'🧊':'🚗';
-    el.style.cssText=moveStyle(e.x,e.y);
-  });
-
-  let car=document.getElementById('playerCar');
-  if(!car){
-    car=document.createElement('div');
-    car.id='playerCar';
-    car.className='sprite player';
-    car.textContent='🚙';
-    board.appendChild(car);
-  }
-  car.style.cssText=moveStyle(player.x,player.y,`rotate(${rotations[player.dir]}deg)`);
-  updateHud();
-}
-function updateHud(){
-  document.getElementById('score').textContent=score;
-  document.getElementById('lives').textContent=lives;
-  document.getElementById('flags').textContent=collected.length;
-  document.getElementById('fuelText').textContent=Math.round(fuel);
-  document.getElementById('fuelBar').style.width=Math.max(0,fuel)+'%';
-}
-function dropSmoke(){
-  if(fuel < 8 || paused || gameOver || win) return;
-  fuel = Math.max(0, fuel-8);
-  smokes.push({x:player.x,y:player.y,life:12});
-  smokes = smokes.slice(-7);
-  msg('뿡! 연막을 뿌렸어요. 추격차가 잠시 멈출 수 있어요.');
-  drawSprites();
-}
-function showMission(){
-  paused = true;
-  const m = missions[missionIndex % missions.length];
-  modal.className='modal show';
-  modal.innerHTML = `<div class="mission-card">
-    <span class="mission-tag">수학 깃발 미션</span>
-    <div class="mission-title">${m.title}</div>
-    <p>${m.story}</p>
-    <div class="formula">${m.formula}</div>
-    <div class="choices">${shuffle(m.choices).map(c=>`<button onclick="answerMission(${c})">${c}</button>`).join('')}</div>
-    <p style="font-size:13px;color:#64748b;margin-bottom:0">틀리면 힌트가 나오고 연료가 조금 줄어요.</p>
-  </div>`;
-}
-function answerMission(v){
-  const m = missions[missionIndex % missions.length];
-  if(v === m.answer){
-    score += 100 + Math.round(fuel);
-    missionIndex++;
-    paused = false;
-    modal.className='modal';
-    modal.innerHTML='';
-    msg('정답! 멋져요. 다음 깃발을 향해 출발!');
-  } else {
-    score = Math.max(0, score-30);
-    fuel = Math.max(0, fuel-7);
-    msg('아쉬워요. 힌트: ' + m.hint);
-  }
-  drawSprites();
-}
-function showEnd(success){
-  paused = true;
-  modal.className='modal show';
-  modal.innerHTML = `<div class="mission-card">
-    <div class="end-emoji">${success?'🏆':'💥'}</div>
-    <div class="end-title">${success?'미션 성공!':'게임 종료'}</div>
-    <p style="text-align:center;font-weight:800">${success?'모든 깃발을 모으며 곱셈 미션을 해결했어요.':'연료나 목숨이 모두 사라졌어요.'}</p>
-    <button class="wide reset-btn" onclick="resetGame()">↻ 다시 도전하기</button>
-  </div>`;
-}
-function gameLoop(){
-  if(paused || gameOver || win) return;
-  tick++;
-  fuel = Math.max(0, fuel-.32);
-  if(fuel <= 0){ gameOver=true; showEnd(false); return; }
-  smokes = smokes.map(s=>({...s,life:s.life-1})).filter(s=>s.life>0);
-  const np = nextPos(player, direction);
-  if(!isWall(np.x,np.y)) player = np;
-  player.dir = direction;
-  if(tick % 2 === 0){
-    enemies = enemies.map(e=>{
-      const hitSmoke = smokes.some(s=>s.x===e.x && s.y===e.y);
-      if(hitSmoke) return {...e, frozen:8};
-      if(e.frozen>0) return {...e, frozen:e.frozen-1};
-      const nd = chooseEnemyDir(e);
-      const n = nextPos(e, nd);
-      return isWall(n.x,n.y) ? e : {...n, frozen:0};
-    });
-  }
-  const flagIndex = flags.findIndex((f,i)=>!collected.includes(i) && f.x===player.x && f.y===player.y);
-  if(flagIndex >= 0){ collected.push(flagIndex); msg('수학 깃발 발견! 문제를 해결하세요.'); showMission(); }
-  if(enemies.some(e=>e.x===player.x && e.y===player.y && e.frozen<=0)){
-    lives--;
-    if(lives<=0){ gameOver=true; showEnd(false); return; }
-    player = {...startPlayer}; enemies = JSON.parse(JSON.stringify(startEnemies));
-    msg('빨간 차와 부딪혔어요. 다시 출발!');
-  }
-  if(collected.length >= flags.length){ win=true; showEnd(true); return; }
-  drawSprites();
-}
-function resetGame(){
-  player={...startPlayer}; direction='right'; enemies=JSON.parse(JSON.stringify(startEnemies));
-  smokes=[]; collected=[]; missionIndex=0; score=0; fuel=100; lives=3; paused=false; gameOver=false; win=false; tick=0;
-  modal.className='modal'; modal.innerHTML=''; msg('깃발을 먹고 수학 미션을 해결하세요!');
-  drawBase(); drawSprites();
-}
-document.addEventListener('keydown', e=>{
-  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
-  if(e.key==='ArrowUp') setDirection('up');
-  if(e.key==='ArrowDown') setDirection('down');
-  if(e.key==='ArrowLeft') setDirection('left');
-  if(e.key==='ArrowRight') setDirection('right');
-  if(e.key===' ') dropSmoke();
-});
-
-board.addEventListener('touchstart', e=>{
-  const t = e.changedTouches[0];
-  touchStartX = t.clientX;
-  touchStartY = t.clientY;
-}, {passive:true});
-
-board.addEventListener('touchend', e=>{
-  const t = e.changedTouches[0];
-  const dx = t.clientX - touchStartX;
-  const dy = t.clientY - touchStartY;
-  if(Math.abs(dx) < 22 && Math.abs(dy) < 22) { dropSmoke(); return; }
-  if(Math.abs(dx) > Math.abs(dy)) setDirection(dx > 0 ? 'right' : 'left');
-  else setDirection(dy > 0 ? 'down' : 'up');
-}, {passive:true});
-
-resetGame();
-timer = setInterval(gameLoop, 135);
-</script>
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
